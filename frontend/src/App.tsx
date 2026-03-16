@@ -1,120 +1,141 @@
-import { useState } from 'react'
-import reactLogo from './assets/react.svg'
-import viteLogo from './assets/vite.svg'
-import heroImg from './assets/hero.png'
+import { useEffect, useMemo, useState } from 'react'
 import './App.css'
 
+type Bowler = {
+  firstName?: string
+  middleInit?: string
+  lastName?: string
+  teamName: string
+  address?: string
+  city?: string
+  state?: string
+  zip?: string
+  phoneNumber?: string
+}
+
+function PageHeader() {
+  return (
+    <header className="page-header">
+      <p className="eyebrow">Bowling League Directory</p>
+      <h1>Barbara and David Fournier&apos;s Bowling Crew</h1>
+      <p className="lede">
+        A current roster of bowlers who play for the Marlins and Sharks teams.
+      </p>
+    </header>
+  )
+}
+
+function BowlerTable({ bowlers }: { bowlers: Bowler[] }) {
+  return (
+    <section className="table-card" aria-label="Bowler list">
+      <div className="table-meta">
+        <h2>Team Roster</h2>
+        <p>{bowlers.length} bowlers</p>
+      </div>
+      <div className="table-scroll">
+        <table>
+          <thead>
+            <tr>
+              <th>Name</th>
+              <th>Team</th>
+              <th>Address</th>
+              <th>City</th>
+              <th>State</th>
+              <th>Zip</th>
+              <th>Phone</th>
+            </tr>
+          </thead>
+          <tbody>
+            {bowlers.map((bowler, index) => (
+              <tr key={`${bowler.lastName ?? 'bowler'}-${index}`}>
+                <td className="name">{formatName(bowler)}</td>
+                <td>{bowler.teamName}</td>
+                <td>{bowler.address ?? '—'}</td>
+                <td>{bowler.city ?? '—'}</td>
+                <td>{bowler.state ?? '—'}</td>
+                <td>{bowler.zip ?? '—'}</td>
+                <td>{bowler.phoneNumber ?? '—'}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+    </section>
+  )
+}
+
+function formatName(bowler: Bowler) {
+  const parts = [bowler.firstName, bowler.middleInit, bowler.lastName].filter(
+    Boolean
+  )
+  return parts.join(' ')
+}
+
 function App() {
-  const [count, setCount] = useState(0)
+  const [bowlers, setBowlers] = useState<Bowler[]>([])
+  const [isLoading, setIsLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
+
+  const apiBase = useMemo(() => {
+    const fromEnv = import.meta.env.VITE_API_BASE
+    return fromEnv || ''
+  }, [])
+
+  useEffect(() => {
+    let isActive = true
+
+    async function loadBowlers() {
+      try {
+        setIsLoading(true)
+        const response = await fetch(`${apiBase}/api/bowlers`)
+        if (!response.ok) {
+          throw new Error(`Request failed (${response.status})`)
+        }
+        const data = (await response.json()) as Bowler[]
+        if (isActive) {
+          setBowlers(data)
+          setError(null)
+        }
+      } catch (err) {
+        if (isActive) {
+          setError(
+            err instanceof Error
+              ? err.message
+              : 'Unable to load bowlers right now.'
+          )
+        }
+      } finally {
+        if (isActive) {
+          setIsLoading(false)
+        }
+      }
+    }
+
+    loadBowlers()
+
+    return () => {
+      isActive = false
+    }
+  }, [apiBase])
 
   return (
-    <>
-      <section id="center">
-        <div className="hero">
-          <img src={heroImg} className="base" width="170" height="179" alt="" />
-          <img src={reactLogo} className="framework" alt="React logo" />
-          <img src={viteLogo} className="vite" alt="Vite logo" />
-        </div>
-        <div>
-          <h1>Get started</h1>
+    <div className="page">
+      <PageHeader />
+      {isLoading ? (
+        <section className="status">Loading bowlers...</section>
+      ) : error ? (
+        <section className="status error">
+          <h2>Could not load bowlers</h2>
+          <p>{error}</p>
           <p>
-            Edit <code>src/App.tsx</code> and save to test <code>HMR</code>
+            Confirm the API is running{apiBase ? ' at ' : ' and reachable.'}
+            {apiBase ? <span>{apiBase}</span> : null}
           </p>
-        </div>
-        <button
-          className="counter"
-          onClick={() => setCount((count) => count + 1)}
-        >
-          Count is {count}
-        </button>
-      </section>
-
-      <div className="ticks"></div>
-
-      <section id="next-steps">
-        <div id="docs">
-          <svg className="icon" role="presentation" aria-hidden="true">
-            <use href="/icons.svg#documentation-icon"></use>
-          </svg>
-          <h2>Documentation</h2>
-          <p>Your questions, answered</p>
-          <ul>
-            <li>
-              <a href="https://vite.dev/" target="_blank">
-                <img className="logo" src={viteLogo} alt="" />
-                Explore Vite
-              </a>
-            </li>
-            <li>
-              <a href="https://react.dev/" target="_blank">
-                <img className="button-icon" src={reactLogo} alt="" />
-                Learn more
-              </a>
-            </li>
-          </ul>
-        </div>
-        <div id="social">
-          <svg className="icon" role="presentation" aria-hidden="true">
-            <use href="/icons.svg#social-icon"></use>
-          </svg>
-          <h2>Connect with us</h2>
-          <p>Join the Vite community</p>
-          <ul>
-            <li>
-              <a href="https://github.com/vitejs/vite" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#github-icon"></use>
-                </svg>
-                GitHub
-              </a>
-            </li>
-            <li>
-              <a href="https://chat.vite.dev/" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#discord-icon"></use>
-                </svg>
-                Discord
-              </a>
-            </li>
-            <li>
-              <a href="https://x.com/vite_js" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#x-icon"></use>
-                </svg>
-                X.com
-              </a>
-            </li>
-            <li>
-              <a href="https://bsky.app/profile/vite.dev" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#bluesky-icon"></use>
-                </svg>
-                Bluesky
-              </a>
-            </li>
-          </ul>
-        </div>
-      </section>
-
-      <div className="ticks"></div>
-      <section id="spacer"></section>
-    </>
+        </section>
+      ) : (
+        <BowlerTable bowlers={bowlers} />
+      )}
+    </div>
   )
 }
 
