@@ -6,6 +6,8 @@ namespace Mission10_Yorgason.Models;
 
 public partial class Bowler
 {
+    [Key]
+    [Required]
     public int BowlerId { get; set; }
     [Required]
 
