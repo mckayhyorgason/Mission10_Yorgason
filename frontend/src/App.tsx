@@ -17,7 +17,7 @@ function PageHeader() {
   return (
     <header className="page-header">
       <p className="eyebrow">Bowling League Directory</p>
-      <h1>Barbara and David Fournier&apos;s Bowling Crew</h1>
+      <h1>Bowling Crew</h1>
       <p className="lede">
         A current roster of bowlers who play for the Marlins and Sharks teams.
       </p>
