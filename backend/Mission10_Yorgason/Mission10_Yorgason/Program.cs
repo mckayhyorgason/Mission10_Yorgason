@@ -34,6 +34,8 @@ if (app.Environment.IsDevelopment())
     app.UseSwaggerUI();
 }
 
+//app.UseCors(x => x.WithOrigins("http://localhost:5000"));
+
 app.UseHttpsRedirection();
 
 app.UseCors("AllowReact");
